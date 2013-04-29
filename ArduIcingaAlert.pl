@@ -3,7 +3,7 @@
 #****************************************************************************
 #*   ArduIcingaAlert                                                        *
 #*   Controls leds on an arduino runing firmata depending on the json       *
-#*   output of Icinga.   													*
+#*   output of Icinga.   	 				            *												*
 #*                                                                          *
 #*   Copyright (C) 2013 by Jeremy Falling except where noted.               *
 #*                                                                          *
