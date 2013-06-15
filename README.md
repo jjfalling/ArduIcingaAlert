@@ -11,3 +11,4 @@ Requires:
  Device::Firmata;
  WWW::Mechanize;
  JSON;
+ Device::SerialPort;
