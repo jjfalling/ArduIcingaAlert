@@ -62,7 +62,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Time::HiRes;
-#use Device::Firmata::Constants qw/ :all /;
+use Device::Firmata::Constants qw/ :all /;
 use Device::Firmata;
 use WWW::Mechanize;
 use JSON;
