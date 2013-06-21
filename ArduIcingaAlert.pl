@@ -211,6 +211,7 @@ sub updateStatus {
 				if ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /critical/i){$criticalStatus = $on;}
 				elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /warning/i){$warningStatus = $on;}
 				elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
+				elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
 				#elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /ok/i){$okStatus = 1;}
 				else {print "ERROR: unknown status $jsonData->{'status'}->{'service_status'}[$i]->{'status'}"; $updateError = 1;}
 			}
@@ -228,6 +229,7 @@ sub updateStatus {
 			else {
 				if ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /down/i){$criticalStatus = $on;}
 				elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
+				elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
 				#elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /up/i){$okStatus = 1;}
 				else {print "ERROR: unknown status $jsonData->{'status'}->{'host_status'}[$i]->{'status'}"; $updateError = 1;}
 			}
