@@ -69,6 +69,8 @@ use JSON;
 
 $|++;
 
+#if we get an interupt, run function to exit
+$SIG{INT} = \&interrupt;
 
 my $progName = "ArduIcingaAlert";
 my $progVersion = "1.0";
@@ -151,7 +153,7 @@ sub controlLeds {
 
 }
 
-#whe
+#when the switch is changed, change blink state
 sub onSwitchChage {
         my ($pin,$old,$new) = @_;
         #print "swich change. now $new\n";
@@ -253,4 +255,16 @@ sub updateStatus {
 	#update time of last run
 	$lastTime = time;
 
+}
+
+
+#if the user ctrl+c's the program, turn off the leds
+sub interrupt {
+    print STDERR "\nReceived an interupt, shutting down....\n";
+	$device->digital_write($green_pin=>$off);
+	$device->digital_write($red_pin=>$off);
+	$device->digital_write($yellow_pin=>$off);
+	$device->digital_write($blue_pin=>$off);
+
+    exit;  # or just about anything else you'd want to do
 }
