@@ -258,7 +258,7 @@ sub updateStatus {
 }
 
 
-#if the user ctrl+c's the program, turn off the leds
+#if the user ctrl+c's the program, turn off the leds and exit
 sub interrupt {
     print STDERR "\nReceived an interupt, shutting down....\n";
 	$device->digital_write($green_pin=>$off);
@@ -266,5 +266,5 @@ sub interrupt {
 	$device->digital_write($yellow_pin=>$off);
 	$device->digital_write($blue_pin=>$off);
 
-    exit;  # or just about anything else you'd want to do
+    exit;
 }
