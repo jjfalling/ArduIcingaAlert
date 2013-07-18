@@ -81,10 +81,10 @@ my $iteration = my $criticalStatus = my $warningStatus = my $okStatus = my $unkn
 print "Waiting for arduino to boot or become ready, please wait...\n";     
 
 my $device = Device::Firmata->open("$serialPort") or die "Could not connect to device running Firmata Server on port $serialPort";
-                                                                                                                                                                                        
+  
+#print device info                                                                                                                                                                                      
 printf "Firmware name: %s\n",$device->{metadata}{firmware};
 printf "Firmware version: %s\n",$device->{metadata}{firmware_version};
-
 do { $device->{protocol}->{protocol_version} = $_ if $device->{metadata}{firmware_version} eq $_ } foreach keys %$COMMANDS;
 printf "Protocol version: %s\n",$device->{protocol}->{protocol_version};
 
@@ -161,6 +161,7 @@ sub onSwitchChage {
 
 }
 
+#this is used if there is an error to display a led pattern to the user
 sub errorPattern {
 		$device->digital_write($green_pin=>$on);
 		Time::HiRes::sleep(0.2);
@@ -224,7 +225,6 @@ sub updateStatus {
 					elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /warning/i){$warningStatus = $on;}
 					elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
 					elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
-					#elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /ok/i){$okStatus = 1;}
 					else {print "ERROR: unknown status $jsonData->{'status'}->{'service_status'}[$i]->{'status'}"; $updateError = 1;}
 				}
 			}
@@ -242,14 +242,13 @@ sub updateStatus {
 					if ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /down/i){$criticalStatus = $on;}
 					elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
 					elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
-					#elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /up/i){$okStatus = 1;}
 					else {print "ERROR: unknown status $jsonData->{'status'}->{'host_status'}[$i]->{'status'}"; $updateError = 1;}
 				}
 			}
 		}
 
+		#if no other status is active, use ok.
 		if ($criticalStatus eq $off && $warningStatus eq $off && $unknownStatus eq $off){$okStatus = $on;}
-		#print "status: c:$criticalStatus w:$warningStatus u:$unknownStatus o:$okStatus \n";
 	}
 	
 	#update time of last run
