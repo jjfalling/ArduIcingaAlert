@@ -71,6 +71,9 @@ $|++;
 
 #if we get an interupt, run function to exit
 $SIG{INT} = \&interrupt;
+$SIG{TERM} = \&interrupt;
+$SIG{HUP} = \&interrupt;
+
 
 my $progName = "ArduIcingaAlert";
 my $progVersion = "1.0";
