@@ -3,7 +3,7 @@
 #****************************************************************************
 #*   ArduIcingaAlert                                                        *
 #*   Controls leds on an arduino runing firmata depending on the json       *
-#*   output of Icinga.   	 				          						*
+#*   output of Icinga.                                                      *
 #*                                                                          *
 #*   Copyright (C) 2013 by Jeremy Falling except where noted.               *
 #*                                                                          *
@@ -33,7 +33,7 @@ my $switch_pin = 13;
 my $serialPort = "/dev/ttyUSB0";
 
 #url of the json data you want, with the format of https(s)://user:pass@url
-my $icingaURL = 'https://username:password@host.tld/icinga/cgi-bin/status.cgi?allunhandledproblems&scroll=0&jsonoutput';
+my $icingaURL = 'http://ArduIcingaAlert:arduPassword@192.168.15.6/icinga/cgi-bin/status.cgi?allunhandledproblems&scroll=0&jsonoutput';
 
 #how often in do you want this to update (in seconds)? 
 my $updateInterval = "30";
@@ -49,7 +49,7 @@ my $ignoreAcknowledged = 1;
 
 #ignore flapping host/services? 0 = no, 1 = yes
 my $ignoreFlapping = 1;
-                       
+
 #ignore host/services with scheduled downtime? 0 = no, 1 = yes
 my $ignoreSchDowntime = 1;
 
@@ -75,14 +75,13 @@ $SIG{INT} = \&interrupt;
 my $progName = "ArduIcingaAlert";
 my $progVersion = "1.0";
 
-my $iteration = my $criticalStatus = my $warningStatus = my $okStatus = my $unknownStatus = my $updateError = my $blinkLED = my $lastTime = 0;                                                                                                                    
-                                                                                                                                                                                                
-                                                                                                                                                            
-print "Waiting for arduino to boot or become ready, please wait...\n";     
+my $iteration = my $criticalStatus = my $warningStatus = my $okStatus = my $unknownStatus = my $updateError = my $blinkLED = my $lastTime = 0;
+
+print "Waiting for arduino to boot or become ready, please wait...\n";
 
 my $device = Device::Firmata->open("$serialPort") or die "Could not connect to device running Firmata Server on port $serialPort";
-  
-#print device info                                                                                                                                                                                      
+
+#print device info
 printf "Firmware name: %s\n",$device->{metadata}{firmware};
 printf "Firmware version: %s\n",$device->{metadata}{firmware_version};
 do { $device->{protocol}->{protocol_version} = $_ if $device->{metadata}{firmware_version} eq $_ } foreach keys %$COMMANDS;
@@ -109,7 +108,7 @@ $device->digital_write($blue_pin=>$off);
 #get inital switch position
 $blinkLED = "print $device->digital_read($switch_pin)";
 
-print "\nReady\n\n";  
+print "\nReady\n\n";
 
 
 #main loop
@@ -147,7 +146,6 @@ sub controlLeds {
         $device->digital_write($yellow_pin=>$warningStatus);
         $device->digital_write($red_pin=>$criticalStatus);
         $device->digital_write($blue_pin=>$unknownStatus);
-        
 
     }
 
@@ -189,7 +187,7 @@ sub updateStatus {
 	#check if its time to run this again, if not, exit from function
 	return unless ((time - $lastTime) >= $updateInterval);
 
-	$criticalStatus = $warningStatus = $okStatus = $unknownStatus = $off;                                                                                                                    
+	$criticalStatus = $warningStatus = $okStatus = $unknownStatus = $off;
 	$updateError = 0;
 	
 	#fetch jsondata. it will throw an error and exit if there is an issue
