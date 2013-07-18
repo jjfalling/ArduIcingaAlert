@@ -33,7 +33,7 @@ my $switch_pin = 13;
 my $serialPort = "/dev/ttyUSB0";
 
 #url of the json data you want, with the format of https(s)://user:pass@url
-my $icingaURL = 'http://ArduIcingaAlert:arduPassword@192.168.15.6/icinga/cgi-bin/status.cgi?allunhandledproblems&scroll=0&jsonoutput';
+my $icingaURL = 'https://username:password@host.tld/icinga/cgi-bin/status.cgi?allunhandledproblems&scroll=0&jsonoutput';
 
 #how often in do you want this to update (in seconds)? 
 my $updateInterval = "30";
