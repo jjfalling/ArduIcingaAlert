@@ -196,23 +196,37 @@ sub updateStatus {
 	#fetch jsondata. it will throw an error and exit if there is an issue
 	my $mech = WWW::Mechanize->new(autocheck => 0);
 	my $res = $mech -> get($icingaURL);
+	
+	#put the json data into a hash
+	my $jsonData = decode_json($mech->content);
+		
+	
 	unless($res->is_success()){
 	
 		my $time = gmtime(time());
 		my $error = $mech->res->content;
 		print "$time GMT - ERROR: could not connect to url: $error\n";
 
-		$updateError=1;
+		#update time of last run
+		$lastTime = time;
+
+		$updateError = 1;
 	}
 
-	else{
-
-		$updateError=0;
-		
-		#put the json data into a hash
-		my $jsonData = decode_json($mech->content);
-		my $curValue;
+	#check if icinga returned an error
+	elsif (defined $jsonData->{'error'}){
 	
+		my $time = gmtime(time());
+		my $error = $jsonData->{'error'}->{'text'};
+		print "$time GMT - ERROR: icinga gave an error: $error\n";
+
+		$updateError = 1;
+
+	}
+	
+	
+	else{
+		
 		my $numOfKeys = keys($jsonData->{'status'}->{'service_status'}) ;
 		for (my $i=0; $i < $numOfKeys; $i++){	
 			#go through the options of what to ignore, if any hit, ignore this service
