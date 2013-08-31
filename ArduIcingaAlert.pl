@@ -68,12 +68,12 @@ use WWW::Mechanize;
 use JSON;
 
 $|++;
+my $jsonData;
 
 #if we get an interupt, run function to exit
 $SIG{INT} = \&interrupt;
 $SIG{TERM} = \&interrupt;
 $SIG{HUP} = \&interrupt;
-
 
 my $progName = "ArduIcingaAlert";
 my $progVersion = "1.0";
@@ -190,16 +190,14 @@ sub updateStatus {
 	#check if its time to run this again, if not, exit from function
 	return unless ((time - $lastTime) >= $updateInterval);
 
+	$updateError=0;
+
 	$criticalStatus = $warningStatus = $okStatus = $unknownStatus = $off;
-	$updateError = 0;
 	
 	#fetch jsondata. it will throw an error and exit if there is an issue
 	my $mech = WWW::Mechanize->new(autocheck => 0);
 	my $res = $mech -> get($icingaURL);
 	
-	#put the json data into a hash
-	my $jsonData = decode_json($mech->content);
-		
 	
 	unless($res->is_success()){
 	
@@ -210,60 +208,67 @@ sub updateStatus {
 		#update time of last run
 		$lastTime = time;
 
-		$updateError = 1;
-	}
-
-	#check if icinga returned an error
-	elsif (defined $jsonData->{'error'}){
-	
-		my $time = gmtime(time());
-		my $error = $jsonData->{'error'}->{'text'};
-		print "$time GMT - ERROR: icinga gave an error: $error\n";
-
-		$updateError = 1;
-
+		$updateError=1;
 	}
 	
+	else {
 	
-	else{
+		#put the json data into a hash
+		$jsonData = decode_json($mech->content);
+
+
+		#check if icinga returned an error
+		if (defined $jsonData->{'error'}){
+	
+			my $time = gmtime(time());
+			my $error = $jsonData->{'error'}->{'text'};
+			print "$time GMT - ERROR: icinga gave an error: $error\n";
+
+			$updateError=1;
+
+		}
+	
+	
+		else{
 		
-		my $numOfKeys = keys($jsonData->{'status'}->{'service_status'}) ;
-		for (my $i=0; $i < $numOfKeys; $i++){	
-			#go through the options of what to ignore, if any hit, ignore this service
-			CHECKSERVICESTATUS: {
-				if ($ignoreDisabledNotifications eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'notifications_enabled'}) eq 0){last CHECKSERVICESTATUS;}
-				elsif ($ignoreAcknowledged eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'has_been_acknowledged'}) eq 1){last CHECKSERVICESTATUS;}
-				elsif ($ignoreFlapping eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'is_flapping'}) eq 1){last CHECKSERVICESTATUS;}
-				elsif ($ignoreSchDowntime eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'in_scheduled_downtime'}) eq 1){last CHECKSERVICESTATUS;}
-				else {
-					if ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /critical/i){$criticalStatus = $on;}
-					elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /warning/i){$warningStatus = $on;}
-					elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
-					elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
-					else {print "ERROR: unknown status $jsonData->{'status'}->{'service_status'}[$i]->{'status'}"; $updateError = 1;}
+			my $numOfKeys = keys($jsonData->{'status'}->{'service_status'}) ;
+			for (my $i=0; $i < $numOfKeys; $i++){	
+				#go through the options of what to ignore, if any hit, ignore this service
+				CHECKSERVICESTATUS: {
+					if ($ignoreDisabledNotifications eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'notifications_enabled'}) eq 0){last CHECKSERVICESTATUS;}
+					elsif ($ignoreAcknowledged eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'has_been_acknowledged'}) eq 1){last CHECKSERVICESTATUS;}
+					elsif ($ignoreFlapping eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'is_flapping'}) eq 1){last CHECKSERVICESTATUS;}
+					elsif ($ignoreSchDowntime eq 1 && ($jsonData->{'status'}->{'service_status'}[$i]->{'in_scheduled_downtime'}) eq 1){last CHECKSERVICESTATUS;}
+					else {
+						if ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /critical/i){$criticalStatus = $on;}
+						elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /warning/i){$warningStatus = $on;}
+						elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
+						elsif ($jsonData->{'status'}->{'service_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
+						else {print "ERROR: unknown status $jsonData->{'status'}->{'service_status'}[$i]->{'status'}"; $updateError = 1;}
+					}
 				}
 			}
-		}
 
-		$numOfKeys = keys($jsonData->{'status'}->{'host_status'}) ;
-		for (my $i=0; $i < $numOfKeys; $i++){	
-			#go through the options of what to ignore, if any hit, ignore this service
-			CHECKHOSTSTATUS: {
-				if ($ignoreDisabledNotifications eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'notifications_enabled'}) eq 0){last CHECKHOSTSTATUS;}
-				elsif ($ignoreAcknowledged eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'has_been_acknowledged'}) eq 1){last CHECKHOSTSTATUS;}
-				elsif ($ignoreFlapping eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'is_flapping'}) eq 1){last CHECKHOSTSTATUS;}
-				elsif ($ignoreSchDowntime eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'in_scheduled_downtime'}) eq 1){last CHECKHOSTSTATUS;}
-				else {
-					if ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /down/i){$criticalStatus = $on;}
-					elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
-					elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
-					else {print "ERROR: unknown status $jsonData->{'status'}->{'host_status'}[$i]->{'status'}"; $updateError = 1;}
+			$numOfKeys = keys($jsonData->{'status'}->{'host_status'}) ;
+			for (my $i=0; $i < $numOfKeys; $i++){	
+				#go through the options of what to ignore, if any hit, ignore this service
+				CHECKHOSTSTATUS: {
+					if ($ignoreDisabledNotifications eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'notifications_enabled'}) eq 0){last CHECKHOSTSTATUS;}
+					elsif ($ignoreAcknowledged eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'has_been_acknowledged'}) eq 1){last CHECKHOSTSTATUS;}
+					elsif ($ignoreFlapping eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'is_flapping'}) eq 1){last CHECKHOSTSTATUS;}
+					elsif ($ignoreSchDowntime eq 1 && ($jsonData->{'status'}->{'host_status'}[$i]->{'in_scheduled_downtime'}) eq 1){last CHECKHOSTSTATUS;}
+					else {
+						if ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /down/i){$criticalStatus = $on;}
+						elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unknown/i){$unknownStatus = $on;}
+						elsif ($jsonData->{'status'}->{'host_status'}[$i]->{'status'} =~ /unreachable/i){$unknownStatus = $on;}
+						else {print "ERROR: unknown status $jsonData->{'status'}->{'host_status'}[$i]->{'status'}"; $updateError = 1;}
+					}
 				}
 			}
-		}
 
-		#if no other status is active, use ok.
-		if ($criticalStatus eq $off && $warningStatus eq $off && $unknownStatus eq $off){$okStatus = $on;}
+			#if no other status is active, use ok.
+			if ($criticalStatus eq $off && $warningStatus eq $off && $unknownStatus eq $off){$okStatus = $on;}
+		}
 	}
 	
 	#update time of last run
