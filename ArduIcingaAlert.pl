@@ -267,7 +267,7 @@ sub updateStatus {
 			}
 
 			#if no other status is active, use ok.
-			if ($criticalStatus eq $off && $warningStatus eq $off && $unknownStatus eq $off){$okStatus = $on;}
+			if ($criticalStatus eq "$off" && $warningStatus eq "$off" && $unknownStatus eq "$off"){$okStatus = $on;}
 		}
 	}
 	
