@@ -1,9 +1,8 @@
 #!/usr/bin/env perl
 
 #****************************************************************************
-#*   ArduIcingaAlert                                                        *
-#*   Controls leds on an arduino runing firmata depending on the json       *
-#*   output of Icinga.                                                      *
+#*   ArduIcingaAlert - spark core version                                   *
+#*   Controls leds on a spark core depending on the json output of Icinga.  *
 #*                                                                          *
 #*   Copyright (C) 2013 by Jeremy Falling except where noted.               *
 #*                                                                          *
@@ -29,8 +28,11 @@ my $blue_pin = 5;
 #used to turn on/off led blinking feature
 my $switch_pin = 13; 
 
-#the serial port that the arduino is on
-my $serialPort = "/dev/ttyUSB0";
+#spark access token/key
+my $sparkAccessToken = "changme";
+
+#spark device id
+my $sparkDeviceId = "changeme";
 
 #url of the json data you want, with the format of https(s)://user:pass@url
 my $icingaURL = 'https://username:password@host.tld/icinga/cgi-bin/status.cgi?allunhandledproblems&scroll=0&jsonoutput';
@@ -62,8 +64,6 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Time::HiRes;
-use Device::Firmata::Constants qw/ :all /;
-use Device::Firmata;
 use WWW::Mechanize;
 use JSON;
 
@@ -267,7 +267,7 @@ sub updateStatus {
 			}
 
 			#if no other status is active, use ok.
-			if ($criticalStatus eq "$off" && $warningStatus eq "$off" && $unknownStatus eq "$off"){$okStatus = $on;}
+			if ($criticalStatus eq $off && $warningStatus eq $off && $unknownStatus eq $off){$okStatus = $on;}
 		}
 	}
 	
