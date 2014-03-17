@@ -20,13 +20,6 @@
 #*   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
 #****************************************************************************
 
-#pin assignments
-my $green_pin = 2;
-my $yellow_pin = 3;
-my $red_pin = 4;
-my $blue_pin = 5;
-#used to turn on/off led blinking feature
-my $switch_pin = 13; 
 
 #spark access token/key
 my $sparkAccessToken = "changme";
@@ -40,8 +33,8 @@ my $icingaURL = 'https://username:password@host.tld/icinga/cgi-bin/status.cgi?al
 #how often in do you want this to update (in seconds)? 
 my $updateInterval = "30";
 
-#how fast do you want the led to blink?
-my $blinkDelay = "0.5";
+#enable led blinking?
+my $blink = 1;
 
 #ignore everything with disabled notifications? 0 = no, 1 = yes
 my $ignoreDisabledNotifications = 1;
@@ -55,9 +48,6 @@ my $ignoreFlapping = 1;
 #ignore host/services with scheduled downtime? 0 = no, 1 = yes
 my $ignoreSchDowntime = 1;
 
-#reverse these if you don't have the ground pin of the leds connected to the digital pins (default 0-on, 1-off)
-my $on = 0;
-my $off = 1;
 
 #########################################################################   
 use strict;
@@ -79,37 +69,9 @@ my $progName = "ArduIcingaAlert";
 my $progVersion = "1.0";
 
 my $iteration = my $criticalStatus = my $warningStatus = my $okStatus = my $unknownStatus = my $updateError = my $blinkLED = my $lastTime = 0;
+my $on = 1;
+my $off = 0;
 
-print "Waiting for arduino to boot or become ready, please wait...\n";
-
-my $device = Device::Firmata->open("$serialPort") or die "Could not connect to device running Firmata Server on port $serialPort";
-
-#print device info
-printf "Firmware name: %s\n",$device->{metadata}{firmware};
-printf "Firmware version: %s\n",$device->{metadata}{firmware_version};
-do { $device->{protocol}->{protocol_version} = $_ if $device->{metadata}{firmware_version} eq $_ } foreach keys %$COMMANDS;
-printf "Protocol version: %s\n",$device->{protocol}->{protocol_version};
-
-#set up the pins
-$device->pin_mode($green_pin=>PIN_OUTPUT);
-$device->pin_mode($yellow_pin=>PIN_OUTPUT);
-$device->pin_mode($red_pin=>PIN_OUTPUT);
-$device->pin_mode($blue_pin=>PIN_OUTPUT);
-$device->pin_mode($switch_pin=>PIN_INPUT);
-
-#watch the switch pin, and run onSwitchChange sub when there is a change
-$device->observe_digital($switch_pin,\&onSwitchChage);
-#poll the device every 200ms
-$device->sampling_interval(200);
-
-#turn all of the leds off
-$device->digital_write($green_pin=>$off);
-$device->digital_write($red_pin=>$off);
-$device->digital_write($yellow_pin=>$off);
-$device->digital_write($blue_pin=>$off);
-
-#get inital switch position
-$blinkLED = "print $device->digital_read($switch_pin)";
 
 print "\nReady\n\n";
 
@@ -119,72 +81,53 @@ while (1) {
 
 	#update the status if needed
 	updateStatus();
-	
-	#start controlling the leds
-	controlLeds();
-	errorPattern() if $updateError ne 0;
 
 	#this is needed to keep the script from consuming too many resources
-	Time::HiRes::sleep("$blinkDelay");
+	Time::HiRes::sleep("0.5");
 	
-	#get the postition of the switch
-	$device->poll;
+
 }
 
 
 sub controlLeds {
-	#check to see if blinking is enabled
-	if ($blinkLED eq 1){
-		my $strobe_state = $iteration++%2;
-		#dont blink the green light
-		if($okStatus eq $on){ $device->digital_write($green_pin=>$okStatus);}
-		if($warningStatus eq $on){$device->digital_write($yellow_pin=>$strobe_state);}else{$device->digital_write($yellow_pin=>$off);}
-		if($criticalStatus eq $on){$device->digital_write($red_pin=>$strobe_state);}else{$device->digital_write($red_pin=>$off);}
-		if($unknownStatus eq $on){$device->digital_write($blue_pin=>$strobe_state);}else{$device->digital_write($blue_pin=>$off);}
+  
+  #check if there was an error updating, if not update the core with the status
+  if ($updateError == 0) {
+    my $mechUpdate = WWW::Mechanize->new(autocheck => 0);
+    my $resUpdate = $mechUpdate ->post("https://api.spark.io/v1/devices/$sparkDeviceId/alert", 
+				       [ 'access_token' => "$sparkAccessToken",
+					 'params' => "$warningStatus$criticalStatus$unknownStatus$blink" ] );
 
-	}
-
-    else{
-		$device->digital_write($green_pin=>$okStatus);
-        $device->digital_write($yellow_pin=>$warningStatus);
-        $device->digital_write($red_pin=>$criticalStatus);
-        $device->digital_write($blue_pin=>$unknownStatus);
+    unless($resUpdate->is_success()){
+	
+      my $time = gmtime(time());
+      my $error = $mechUpdate->res->content;
+      print "$time GMT - ERROR: could not connect to url: $error\n";
 
     }
 
+  }
+  #an error occured, update core with error pattern
+  else {
+
+    #send an invalid update to the core (not 4 digits) to trigger the error pattern
+    my $mechUpdate = WWW::Mechanize->new(autocheck => 0);
+    my $resUpdate = $mechUpdate ->post("https://api.spark.io/v1/devices/$sparkDeviceId/alert", 
+				       [ 'access_token' => "$sparkAccessToken",
+					 'params' => "0" ] );
+
+    unless($resUpdate->is_success()){
+
+      my $time = gmtime(time());
+      my $error = $mechUpdate->res->content;
+      print "$time GMT - ERROR: could not connect to url: $error\n";
+
+    }
+  }
 }
 
-#when the switch is changed, change blink state
-sub onSwitchChage {
-        my ($pin,$old,$new) = @_;
-        #print "swich change. now $new\n";
-        $blinkLED = $new;
 
-}
 
-#this is used if there is an error to display a led pattern to the user
-sub errorPattern {
-		$device->digital_write($green_pin=>$on);
-		Time::HiRes::sleep(0.2);
-		$device->digital_write($green_pin=>$off);
-		Time::HiRes::sleep(0.2);
-
-		$device->digital_write($yellow_pin=>$on);
-		Time::HiRes::sleep(0.2);
-		$device->digital_write($yellow_pin=>$off);
-		Time::HiRes::sleep(0.2);
-
-		$device->digital_write($red_pin=>$on);
-		Time::HiRes::sleep(0.2);
-		$device->digital_write($red_pin=>$off);
-		Time::HiRes::sleep(0.2);
-
-		$device->digital_write($blue_pin=>$on);
-		Time::HiRes::sleep(0.2);
-		$device->digital_write($blue_pin=>$off);
-		Time::HiRes::sleep(0.2);
-
-}
 
 sub updateStatus {
 	#check if its time to run this again, if not, exit from function
@@ -207,8 +150,8 @@ sub updateStatus {
 
 		#update time of last run
 		$lastTime = time;
+	       	$updateError=1;
 
-		$updateError=1;
 	}
 	
 	else {
@@ -269,21 +212,21 @@ sub updateStatus {
 			#if no other status is active, use ok.
 			if ($criticalStatus eq $off && $warningStatus eq $off && $unknownStatus eq $off){$okStatus = $on;}
 		}
+
 	}
 	
 	#update time of last run
 	$lastTime = time;
 
+	#update the spark core with the new status
+	controlLeds();
+
+
 }
 
 
-#if the user ctrl+c's the program, turn off the leds and exit
 sub interrupt {
     print STDERR "\nReceived an interupt, shutting down....\n";
-	$device->digital_write($green_pin=>$off);
-	$device->digital_write($red_pin=>$off);
-	$device->digital_write($yellow_pin=>$off);
-	$device->digital_write($blue_pin=>$off);
-
     exit;
 }
+

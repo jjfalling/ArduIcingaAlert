@@ -1,12 +1,15 @@
+//ArduIcingaAlert
+//JFalling - 2014
+
 // Spark firmware interleaves background CPU activity associated with WiFi + Cloud activity with your code. 
 // Make sure none of your code delays or blocks for too long (like more than 5 seconds), or weird things can happen.
 
 
 //define the led color pins
-int greenLed = A0;  
-int yellowLed = A1; 
-int redLed = A2;
-int blueLed = A3; 
+int greenLed = D0;  
+int yellowLed = D1; 
+int redLed = D2;
+int blueLed = D3; 
 
 //0 is low to turn on, 1 is high to turn on
 int outputType = 0;
@@ -16,6 +19,9 @@ int blinkDelay = 700;
 
 //how long should we wait to be updated before throwing an error (in seconds)?
 int updateWatchdog = 120;
+
+
+
 
 
 //some globals
@@ -34,7 +40,7 @@ void setup() {
 	//[send y,r,b,blink]
 	Spark.function("alert", updateAlert);
 	
-	//Serial.begin(9600);
+	Serial.begin(9600);
 
 	pinMode(greenLed, OUTPUT);
 	pinMode(yellowLed, OUTPUT);
@@ -72,7 +78,19 @@ void loop() {
 	unsigned long lastUpdateDiff = time - lastUpdate;
 	//Serial.println(lastUpdateDiff);
 	if (lastUpdateDiff > updateWatchdogMs) {
-	errorPattern();    
+    	digitalWrite(greenLed, on);  
+    	delay(300); 
+    	digitalWrite(greenLed, off);
+    	digitalWrite(yellowLed, on);
+    	delay(300);
+    	digitalWrite(yellowLed, off);
+    	digitalWrite(redLed, on); 
+    	delay(300); 
+    	digitalWrite(redLed, off);
+    	digitalWrite(blueLed, on);
+    	delay(300); 
+    	digitalWrite(blueLed, off);
+    	delay(1000);       
 	}
 
 	else {
@@ -104,6 +122,9 @@ void loop() {
 			digitalWrite(yellowLed, off);
 			digitalWrite(redLed, off);
 			digitalWrite(blueLed, off);
+
+	Serial.println("lastUpdate");
+	Serial.println(lastUpdate);
 
 			if (lastUpdate > 0){
 				digitalWrite(greenLed, on);
@@ -147,31 +168,18 @@ int updateAlert(String alertStatus) {
 
 	if(alertStatus.substring(3,4) == "1" || alertStatus.substring(3,4) == "0")
 	{
-		return 1;
 		lastUpdate = millis();
+		return 1;
+		
 	}
 
 	else {
+	    //if we get bad data, set the last update to force an error
+		lastUpdate = -10000000;
 		return -1;
+		
 	}
 
 }
 
 
-//patterns
-
-void errorPattern (void) {
-	digitalWrite(greenLed, on);  
-	delay(300); 
-	digitalWrite(greenLed, off);
-	digitalWrite(yellowLed, on);
-	delay(300);
-	digitalWrite(yellowLed, off);
-	digitalWrite(redLed, on); 
-	delay(300); 
-	digitalWrite(redLed, off);
-	digitalWrite(blueLed, on);
-	delay(300); 
-	digitalWrite(blueLed, off);
-	delay(1000);    
-}
