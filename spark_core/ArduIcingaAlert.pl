@@ -53,7 +53,6 @@ my $ignoreSchDowntime = 1;
 use strict;
 use warnings;
 use Data::Dumper;
-use Time::HiRes;
 use WWW::Mechanize;
 use JSON;
 
@@ -83,7 +82,7 @@ while (1) {
 	updateStatus();
 
 	#this is needed to keep the script from consuming too many resources
-	Time::HiRes::sleep("0.5");
+	sleep("1");
 	
 
 }
