@@ -7,6 +7,5 @@ It is designed to turn on and off red, yellow, blue, and green leds to indicate 
 At the top of the perl file there are several options that allow you to ignore hosts and services in certain states. There are also some options to set in the firmware.
 
 Requires:
- Time::HiRes;
  WWW::Mechanize;
  JSON;

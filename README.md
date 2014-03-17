@@ -6,4 +6,4 @@ It is designed to turn on and off red, yellow, blue, and green leds to indicate 
 
 At the top of the file there are several options that allow you to ignore hosts and services in certain states. 
 
-There are two versions, the first for using an arduino running firmata over serial and the second for a spark core with the provided firmware.  See the the readme of the desired version for more information. 
+There are two versions, the first for using an arduino running firmata over serial and the second for a spark core with the provided firmware.  See the the readme of the desired version for more information and dependancies. 
