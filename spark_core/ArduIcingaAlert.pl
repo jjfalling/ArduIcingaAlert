@@ -55,6 +55,7 @@ use warnings;
 use Data::Dumper;
 use WWW::Mechanize;
 use JSON;
+use Getopt::Long;
 
 $|++;
 my $jsonData;
@@ -70,7 +71,15 @@ my $progVersion = "1.0";
 my $iteration = my $criticalStatus = my $warningStatus = my $okStatus = my $unknownStatus = my $updateError = my $blinkLED = my $lastTime = 0;
 my $on = 1;
 my $off = 0;
+my $debug;
 
+
+#TODO: fix whole debug vs verbose thing.
+Getopt::Long::Configure('bundling');
+GetOptions
+        ("d|debug" => \$debug) ;
+
+debugOutput("Debugging enabled");
 
 print "\nReady\n\n";
 
@@ -101,13 +110,20 @@ sub controlLeds {
 	
       my $time = gmtime(time());
       my $error = $mechUpdate->res->content;
-      print "$time GMT - ERROR: could not connect to url: $error\n";
+      print "$time GMT - ERROR: could not connect to spark core url: $error\n";
 
     }
+    else {
+    	debugOutput("Updated spark core successfully");
 
+    }
+    
   }
   #an error occured, update core with error pattern
   else {
+
+	debugOutput("An error occured, updating spark core with error pattern");
+
 
     #send an invalid update to the core (not 4 digits) to trigger the error pattern
     my $mechUpdate = WWW::Mechanize->new(autocheck => 0);
@@ -119,7 +135,7 @@ sub controlLeds {
 
       my $time = gmtime(time());
       my $error = $mechUpdate->res->content;
-      print "$time GMT - ERROR: could not connect to url: $error\n";
+      print "$time GMT - ERROR: could not connect to spark core url: $error\n";
 
     }
   }
@@ -142,10 +158,10 @@ sub updateStatus {
 	
 	
 	unless($res->is_success()){
-	
+		
 		my $time = gmtime(time());
 		my $error = $mech->res->content;
-		print "$time GMT - ERROR: could not connect to url: $error\n";
+		print "$time GMT - ERROR: could not connect to icinga url: $error\n";
 
 		#update time of last run
 		$lastTime = time;
@@ -155,6 +171,7 @@ sub updateStatus {
 	
 	else {
 	
+		debugOutput("Updated icinga data successfully");
 		#put the json data into a hash
 		$jsonData = decode_json($mech->content);
 
@@ -224,8 +241,17 @@ sub updateStatus {
 }
 
 
+#This function will be used to give the user output, if they so desire
+sub debugOutput {
+        my $human_status = $_[0];
+        if ($debug) {
+                print "**DEBUG: ". gmtime(time()) .": $human_status \n";
+
+        }
+}
+
+
 sub interrupt {
     print STDERR "\nReceived an interupt, shutting down....\n";
     exit;
 }
-
