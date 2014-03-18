@@ -101,6 +101,8 @@ sub controlLeds {
   
   #check if there was an error updating, if not update the core with the status
   if ($updateError == 0) {
+  
+	debugOutput("Attempting to update spark core");
     my $mechUpdate = WWW::Mechanize->new(autocheck => 0);
     my $resUpdate = $mechUpdate ->post("https://api.spark.io/v1/devices/$sparkDeviceId/alert", 
 				       [ 'access_token' => "$sparkAccessToken",
@@ -152,6 +154,8 @@ sub updateStatus {
 
 	$criticalStatus = $warningStatus = $okStatus = $unknownStatus = $off;
 	
+	debugOutput("Attempting to update icinga data");
+
 	#fetch jsondata. it will throw an error and exit if there is an issue
 	my $mech = WWW::Mechanize->new(autocheck => 0);
 	my $res = $mech -> get($icingaURL);
@@ -255,3 +259,4 @@ sub interrupt {
     print STDERR "\nReceived an interupt, shutting down....\n";
     exit;
 }
+
