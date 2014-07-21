@@ -32,7 +32,7 @@ String red="0";
 String yellow="0";
 String blink="1";
 unsigned long lastUpdate=0;
-unsigned long time;
+unsigned long curTime;
 
 
 void setup() {
@@ -71,11 +71,11 @@ void setup() {
 void loop() {
     
 	//updateWatchdog * 1000000 to get ms
-	time = millis();
+	curTime = millis();
 	//Serial.println(time);
 	unsigned long  updateWatchdogMs = updateWatchdog * 1000;
 	//Serial.println(updateWatchdogMs);
-	unsigned long lastUpdateDiff = time - lastUpdate;
+	unsigned long lastUpdateDiff = curTime - lastUpdate;
 	//Serial.println(lastUpdateDiff);
 	if (lastUpdateDiff > updateWatchdogMs) {
     	digitalWrite(greenLed, on);  
@@ -181,5 +181,4 @@ int updateAlert(String alertStatus) {
 	}
 
 }
-
 
