@@ -20,37 +20,37 @@
 #*   along with this program.  If not, see <http://www.gnu.org/licenses/>.  *
 #****************************************************************************
 
-#spark access token/key
+#Spark access token/key
 my $sparkAccessToken = "changme";
 
-#spark device id
+#Spark device id
 my $sparkDeviceId = "changeme";
 
-#url of the json data you want, with the format of https(s)://user:pass@url
+#Icinga url to the status that you want to dislplay (in json), with the format of https(s)://user:pass@url
 my $icingaURL = 'https://username:password@host.tld/icinga/cgi-bin/status.cgi?allunhandledproblems&scroll=0&jsonoutput';
 
-#how often in do you want this to update (in seconds)?
+#How often in do you want to poll icinga (in seconds)?
 my $updateInterval = "30";
 
-#enable led blinking?
+#Enable led blinking?
 my $blink = 1;
 
-#ignore everything with disabled notifications? 0 = no, 1 = yes
+#Ignore everything with disabled notifications? 0 = no, 1 = yes
 my $ignoreDisabledNotifications = 1;
 
-#ignore acknowledged host/services? 0 = no, 1 = yes
+#Ignore acknowledged host/services? 0 = no, 1 = yes
 my $ignoreAcknowledged = 1;
 
-#ignore flapping host/services? 0 = no, 1 = yes
+#Ignore flapping host/services? 0 = no, 1 = yes
 my $ignoreFlapping = 1;
 
-#ignore host/services with scheduled downtime? 0 = no, 1 = yes
+#Ignore host/services with scheduled downtime? 0 = no, 1 = yes
 my $ignoreSchDowntime = 1;
 
-#what is the min time in seconds for a host or service before reporting a problem? 0 to disable
+#What is the min time in seconds for a host or service to have a problem before reporting it? 0 to disable
 my $minProblemTime = 60;
 
-#max age of the icinga status data in seconds. this detects if icinga broke
+#Max age of the icinga status data in seconds. This detect if icinga is responding but no longer doing or reporting check status
 my $maxStatusDataAge = 60;
 
 #########################################################################
