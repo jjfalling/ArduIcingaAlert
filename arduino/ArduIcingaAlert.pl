@@ -39,8 +39,8 @@ my $icingaURL = 'https://username:password@host.tld/icinga/cgi-bin/status.cgi?al
 #How often in do you want to poll icinga (in seconds)?
 my $updateInterval = "30";
 
-#Enable led blinking?
-my $blink = 1;
+#how fast do you want the led to blink?
+my $blinkDelay = "0.5";
 
 #Ignore everything with disabled notifications? 0 = no, 1 = yes
 my $ignoreDisabledNotifications = 1;
@@ -65,6 +65,8 @@ my $on  = 0;
 my $off = 1;
 
 #########################################################################
+#set min perl version
+use 5.12.1;
 use strict;
 use warnings;
 use Data::Dumper;
@@ -341,4 +343,3 @@ sub convertDurationToSec {
 
     return $finalSecs;
 }
-

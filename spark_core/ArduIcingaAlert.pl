@@ -54,6 +54,8 @@ my $minProblemTime = 60;
 my $maxStatusDataAge = 60;
 
 #########################################################################
+#set min perl version
+use 5.12.1;
 use strict;
 use warnings;
 use Data::Dumper;
@@ -206,7 +208,7 @@ sub updateStatus {
         }
         else {
 
-            my $numOfKeys = keys( $jsonData->{'status'}->{'service_status'} );
+            my $numOfKeys = keys( @{ $jsonData->{'status'}->{'service_status'} } );
             for ( my $i = 0 ; $i < $numOfKeys ; $i++ ) {
 
                 #go through the options of what to ignore, if any hit, ignore this service
@@ -227,7 +229,7 @@ sub updateStatus {
                 }
             }
 
-            $numOfKeys = keys( $jsonData->{'status'}->{'host_status'} );
+            $numOfKeys = keys( @{ $jsonData->{'status'}->{'host_status'} } );
             for ( my $i = 0 ; $i < $numOfKeys ; $i++ ) {
 
                 #go through the options of what to ignore, if any hit, ignore this service

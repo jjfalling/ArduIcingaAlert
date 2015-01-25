@@ -1,0 +1,4 @@
+#use with cpanm, such as 'cpanm < dependencies.txt'
+WWW::Mechanize~0
+LWP::Protocol::https~0
+JSON~0
