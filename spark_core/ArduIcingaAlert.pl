@@ -106,7 +106,7 @@ sub controlLeds {
         debugOutput("Attempting to update spark core");
         my $mechUpdate = WWW::Mechanize->new( autocheck => 0 );
         my $resUpdate = $mechUpdate->post(
-            "https://api.spark.io/v1/devices/$sparkDeviceId/alert",
+            "https://api.particle.io/v1/devices/$sparkDeviceId/alert",
             [
                 'access_token' => "$sparkAccessToken",
                 'params'       => "$warningStatus$criticalStatus$unknownStatus$blink"
@@ -135,7 +135,7 @@ sub controlLeds {
         #send an invalid update to the core (not 4 digits) to trigger the error pattern
         my $mechUpdate = WWW::Mechanize->new( autocheck => 0 );
         my $resUpdate = $mechUpdate->post(
-            "https://api.spark.io/v1/devices/$sparkDeviceId/alert",
+            "https://api.particle.io/v1/devices/$sparkDeviceId/alert",
             [
                 'access_token' => "$sparkAccessToken",
                 'params'       => "0"
