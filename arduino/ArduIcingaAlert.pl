@@ -75,6 +75,7 @@ use Device::Firmata::Constants qw/ :all /;
 use Device::Firmata;
 use WWW::Mechanize;
 use JSON;
+use Encode qw(encode_utf8);
 
 $|++;
 my $jsonData;
@@ -229,7 +230,7 @@ sub updateStatus {
     else {
 
         #put the json data into a hash
-        $jsonData = decode_json( $mech->content );
+        $jsonData = decode_json( encode_utf8( $mech->content ) );
 
         #check if icinga returned an error
         if ( defined $jsonData->{'error'} ) {
